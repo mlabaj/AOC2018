@@ -87,7 +87,6 @@ def solve_b(pts)
 end
 
 def correct_dist(point, pts)
-  puts "Checking #{point[0]} #{point[1]}"
   dists = pts.map { |px, py| (px-point[0]).abs + (py-point[1]).abs }
 
   return dists.sum <= 10_000 ? 1 : 0

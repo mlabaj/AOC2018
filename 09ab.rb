@@ -20,7 +20,8 @@ class CircleList
 
   # do not remove the last one please :), not implemented
   def pop
-    return @pointer.remove
+    right
+    return @pointer.prev.remove
   end
 
   def insert(val)
@@ -83,16 +84,17 @@ def presimulate(max, debug: false)
 
   (1..max).each do |step|
     if step % 23 == 0
-      table.left(8)
+      table.left(7)
       score = table.pop + step
-      table.right(2)
 
       TAKEN << score
+
       puts ">>>>>>>>>>> Taking #{score}" if debug
     else
-      table.insert(step)
       table.right(1)
+      table.insert(step)
     end
+
     puts table.inspect if debug
   end
 

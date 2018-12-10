@@ -15,7 +15,7 @@ typedef struct bbox {
 } BBOX;
 
 
-void iterate(POINT *p, int N, BBOX *out_box, int direction) {
+int iterate(POINT *p, int N, BBOX *out_box, int direction) {
     int xmin = INT_MAX;
     int ymin = INT_MAX;
     int xmax = INT_MIN;
@@ -35,6 +35,8 @@ void iterate(POINT *p, int N, BBOX *out_box, int direction) {
     out_box->y = ymax-ymin;
     out_box->basex = xmin;
     out_box->basey = ymin;
+
+    return direction;
 }
 
 void print(POINT *p, int N, BBOX box) {
@@ -75,14 +77,12 @@ int main() {
     int timer = 0;
 
     while(1) {
-        iterate(p, N, &bb, +1);
-        timer++;
+        timer += iterate(p, N, &bb, +1);
 
         // when stars overshoot
         if (bb.x - prev_bb.x > 0) {
             // rewind last movement
-            iterate(p, N, &bb, -1);
-            timer--;
+            timer += iterate(p, N, &bb, -1);
 
             print(p, N, bb);
             printf("in %d seconds\n\n", timer);

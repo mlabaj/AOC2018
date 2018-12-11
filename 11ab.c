@@ -1,12 +1,13 @@
 #include <limits.h>
 #include <stdio.h>
+#include <string.h>
 #include <assert.h>
 
-typedef struct grid {
+typedef struct square {
     int x, y;
     int power;
     int size;
-} GRID;
+} SQUARE;
 
 int get_cell(int serial, int x, int y) {
     // Find the fuel cell's rack ID, which is its X coordinate plus 10.
@@ -25,24 +26,42 @@ int get_cell(int serial, int x, int y) {
     return power;
 }
 
-int get_grid(int serial, int x, int y, int gridsize) {
-    int power = 0;
-    for (int ix = 0; ix<gridsize; ix++)
-        for (int iy = 0; iy<gridsize; iy++)
-            power += get_cell(serial, x+ix, y+iy);
-    return power;
+// SUMS[x][y] = sum of cells from x, y to lower right corner of the grid
+//   includes last row/column (x = 301 or y = 301) as boundaries
+int SUMS[302][302];
+
+void prepare(int serial) {
+    memset(SUMS, 0, sizeof(SUMS));
+
+    for (int iy=300; iy>=0; iy--) {
+        int rowsum = 0;
+        for (int ix=300; ix>=0; ix--) {
+            rowsum += get_cell(serial, ix, iy);
+            SUMS[ix][iy] = SUMS[ix][iy+1] + rowsum;
+        }
+    }
 }
 
-GRID solve(int serial, int minsize, int maxsize) {
-    GRID ret;
+int get_square(int x, int y, int size) {
+    // - (+) get sum from point x,y to the end of the grid
+    // - (-) remove everything to the right of the square
+    // - (-) remove everything under the square
+    // - area to the-right-and-below (from lower right corner of the square) was added once and removed twice,
+    //   add it back once more, to cancel it out
+    return SUMS[x][y] - SUMS[x+size][y] - SUMS[x][y+size] + SUMS[x+size][y+size];
+}
+
+SQUARE solve(int serial, int minsize, int maxsize) {
+    SQUARE ret;
 
     int maxpower = INT_MIN;
     int at_x=-1, at_y=-1, at_size=-1;
 
+    prepare(serial);
     for (int size=minsize; size<=maxsize; size++) {
         for (int ix = 1; ix <= 300 - size; ix++) {
             for (int iy = 1; iy <= 300 - size; iy++) {
-                int power = get_grid(serial, ix, iy, size);
+                int power = get_square(ix, iy, size);
                 if (power > maxpower)
                     maxpower = power, at_x = ix, at_y = iy, at_size = size;
             }
@@ -56,12 +75,12 @@ GRID solve(int serial, int minsize, int maxsize) {
     return ret;
 }
 
-GRID solveA(int serial)
+SQUARE solveA(int serial)
 {
     return solve(serial, 3, 3);
 }
 
-GRID solveB(int serial)
+SQUARE solveB(int serial)
 {
     return solve(serial, 1, 300);
 }
@@ -73,7 +92,7 @@ int main() {
     if (fscanf(fp, "%d", &serial) <= 0) return 1;
     fclose(fp);
 
-    GRID result;
+    SQUARE result;
 
     result = solveA(18);
     assert(result.x == 33);
